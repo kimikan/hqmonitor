@@ -5,10 +5,13 @@ due to the lifetime restriction.  it's a little complicated to write the callbac
 
 but we can approch this with Rc<RefCell<T>>.
 
-in c++.
+in c++. 
+
+
 struct A {
    void do() {}
 };
+
 
 sturct B {
     void set_a(A*a) { this->a = a; }
@@ -17,6 +20,7 @@ sturct B {
     }
     A *a;
 };
+
 
 int main() {
     A a;

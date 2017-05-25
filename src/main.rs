@@ -16,8 +16,8 @@ impl I for S {
     }
 }
 
-struct Context<'a> {
-    _ptr:Rc<RefCell<&'a mut I>>,
+struct Context {
+    _ptr:Rc<RefCell<I>>,
     _str:String,
 }
 
@@ -25,26 +25,26 @@ trait Fake {
     fn test(self);
 }
 
-impl<'a> Fake for Rc<RefCell<Context<'a>>> {
+impl Fake for Rc<RefCell<Context>> {
     fn test(self) {
         let ptr = self.borrow().get_ptr();
         ptr.borrow_mut().write(self);
     }
 }
 
-impl<'a> Context<'a> {
+impl Context {
     fn dump(&mut self) {
         self._str = "final value".to_owned();
     }
 
-    fn get_ptr(&self) -> Rc<RefCell<&'a mut I>> {
+    fn get_ptr(&self) -> Rc<RefCell<I>> {
         self._ptr.clone()
     }
 }
 
 fn main() {
-    let mut x = S{};
-    let s = Rc::new(RefCell::new(&mut x as &mut I));
+    let x = S{};
+    let s = Rc::new(RefCell::new(x));
 
     let c = Context{_str:"first value".to_owned(), _ptr:s};
 

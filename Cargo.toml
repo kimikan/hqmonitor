@@ -1,0 +1,12 @@
+[package]
+name = "hqmonitor"
+version = "0.1.0"
+authors = [" <>"]
+
+[dependencies]
+serde_json="*"
+serde_derive="*"
+serde="*"
+tera="*"
+chrono="*"
+xml-rs = "*"

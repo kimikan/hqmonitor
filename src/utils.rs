@@ -136,14 +136,23 @@ pub fn get_all_processes() -> Option<Vec<ProcessInfo>> {
 }
 
 pub fn check_process(name:&str)->io::Result<()> {
+    let mut report = false;
     let ids = get_process_id(name);
     if let Some(ids2) = ids {
         let count = ids2.len();
         if count <= 0 {
-            let content = format!("Process {} stopped", name);
-            report_alarm(&content);
+            report = true;
+
         }
+    } else {
+        report = true;
     }
+
+    if report {
+        let content = format!("Process {} stopped", name);
+        report_alarm(&content);
+    }
+
     Ok(())
 }
 

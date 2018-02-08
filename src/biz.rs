@@ -143,8 +143,10 @@ impl BizContext {
 
             if self._txt_adjust == 0 {
                 //only adjust in normal time
-                if s_market - s_last <= 10 {
+                let diff = s_market - s_last;
+                if s_last != 0 && diff <= 10 && diff >= 1 {
                     self._txt_adjust = s_now - s_market;
+                    println!("Ajust shanghai market time: {}", self._txt_adjust);
                 }
             }
 

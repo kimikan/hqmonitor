@@ -1,6 +1,11 @@
 
+#![feature(plugin, decl_macro, custom_derive)]
+#![plugin(rocket_codegen)]
 
 #![allow(unused_imports)]
+
+extern crate rocket;
+
 
 #[macro_use]
 extern crate tera;
@@ -13,12 +18,15 @@ extern crate serde_json;
 extern crate chrono;
 extern crate xml;
 
+
 mod utils;
 mod biz;
+mod views;
 
 use std::collections::HashMap;
 
 use std::io;
+use std::thread;
 
 fn run() ->io::Result<()> {
 
@@ -32,11 +40,11 @@ fn run() ->io::Result<()> {
     println!("workdays {:?}", workdays);
     println!("Ready, go");
 
+
     loop {
         let (date, _) = utils::get_today_date_time();
         if let Some(v) = workdays.get(&date.to_string()) {
             if *v {
-                use std::thread;
                 thread::sleep_ms(1000);
                 ctx.check_sh_market()?;
 
@@ -45,7 +53,6 @@ fn run() ->io::Result<()> {
                 }
 
             } else {
-                use std::thread;
                 thread::sleep_ms(1000 * 3600);
             }
         }
@@ -56,6 +63,12 @@ fn run() ->io::Result<()> {
 }
 
 fn main() {
+
+    thread::spawn(move ||{
+        loop {
+            views::server();
+        }
+    });
 
     loop {
         if let Err(e) = run() {

@@ -11,7 +11,7 @@ use rocket::Request;
 use rocket_contrib::Template;
 
 
-#[catch(404)]
+#[error(404)]
 fn not_found(req: &Request) -> Template {
 
     let mut map = HashMap::new();
@@ -19,6 +19,13 @@ fn not_found(req: &Request) -> Template {
     Template::render("error/404", &map)
 }
 
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct TemplateContext {
+    name: String,
+    items: Vec<String>
+}
 
 #[derive(FromForm)]
 struct Person {
@@ -35,12 +42,37 @@ fn hello(person: Person) -> String {
     }
 }
 
+#[get("/")]
+fn index() -> Template {
+
+    let mut v:Vec<String> = vec![];
+
+    let today = ::ALARM_MANAGER.get_today();
+    let logs = ::ALARM_MANAGER.get_by_date(today);
+
+    println!("xxxxxxxxxxxxx today:{}, {:?}", today, logs);
+
+    if let Some(ls) = logs {
+        let x = ls.read().unwrap();
+
+        for l in &(*x) {
+            println!("{}", l);
+            v.push(l.clone());
+
+        }
+
+    }
+
+    let context = TemplateContext { name : "logs".to_string(), items: v };
+    Template::render("list", context)
+}
+
 fn rocket()->rocket::Rocket {
 
     rocket::ignite()
-        .mount("/", routes![hello])
+        .mount("/", routes![index, hello])
         .attach(Template::fairing())
-        .catch(catchers![not_found])
+        .catch(errors![not_found])
 }
 
 pub fn server() {

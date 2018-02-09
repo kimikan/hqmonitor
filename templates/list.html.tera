@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>All logs</title>
+</head>
+<body>
+<p><h2><a href="/"> <=back </a></h2></p>
+<p><h2>All logs</h2></p>
+<table border="1" width="100%">
+    <tr>
+        <th>Content</th>
+        <th/><th/><th/>
+    </tr>
+
+    {% for o in items %}
+    <tr>
+        <td>{{ o }}</td>
+        <td><a href="/account/delete?id={{ o }}">delete</a></td>
+        <td><a href="/account/detail?id={{ o }}">detail</a></td>
+        <td><a href="/account/refresh?id={{ o }}">refresh</a></td>
+    </tr>
+    {% endfor %}
+
+</table>
+</body>
+</html>

@@ -79,11 +79,17 @@ pub fn get_current_time()->u32 {
 }
 
 pub fn report_alarm(str : &String) {
+
     use chrono;
     let now = chrono::Local::now();
 
-    println!("[{:?}]: {}, ",
+    let log = format!("[{:?}]: {}, ",
              now.to_rfc2822(), str);
+
+    if !::ALARM_MANAGER.add_log(log) {
+
+        println!("Add log failed: {}", str);
+    }
 }
 
 #[derive(Debug)]

@@ -1,5 +1,5 @@
 [package]
-name = "hqmonitor"
+name = "Sample"
 version = "0.1.0"
 authors = [" <>"]
 
@@ -10,3 +10,11 @@ serde="*"
 tera="*"
 chrono="*"
 xml-rs = "*"
+rocket="*"
+rocket_codegen="*"
+lazy_static="*"
+
+[dependencies.rocket_contrib]
+version="*"
+default-features = false
+features = ["tera_templates"]

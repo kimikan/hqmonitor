@@ -13,6 +13,7 @@ xml-rs = "*"
 rocket="*"
 rocket_codegen="*"
 lazy_static="*"
+hyper="*"
 
 [dependencies.rocket_contrib]
 version="*"

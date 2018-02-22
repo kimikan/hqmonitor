@@ -5,6 +5,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Configuration {
+    pub _env:String,
     pub _txt_file: String,
     pub _dbf_file: String,
 
@@ -15,6 +16,8 @@ pub struct Configuration {
     pub _end_time : u32,
 
     pub _monitor_processes : Vec<String>,
+    pub _sms_addr : String,
+    pub _sms_tag : String,
 }
 
 impl Configuration {
@@ -48,6 +51,7 @@ impl Clone for Configuration {
     fn clone(&self)->Configuration {
 
         Configuration {
+            _env : self._env.clone(),
             _dbf_file : self._dbf_file.clone(),
             _txt_interval : self._txt_interval,
             _dbf_interval : self._dbf_interval,
@@ -55,6 +59,8 @@ impl Clone for Configuration {
             _start_time : self._start_time,
             _end_time : self._end_time,
             _monitor_processes : self._monitor_processes.clone(),
+            _sms_addr : self._sms_addr.clone(),
+            _sms_tag : self._sms_tag.clone(),
         }
     }
 }
@@ -63,7 +69,8 @@ pub fn get_seconds(time:u32)->i32 {
 
     let h = time / 10000;
     let m = (time / 100) % 100;
-    let s = time % 10000;
+    let s = time % 100;
+    //println!("{} {} {} {}", time, h, m, s);
 
     (h * 3600 + m * 60 + s) as i32
 }
@@ -78,18 +85,15 @@ pub fn get_current_time()->u32 {
     time
 }
 
-pub fn report_alarm(str : &String) {
-
+pub fn report_alarm(mut alarm : ::Alarm) {
     use chrono;
     let now = chrono::Local::now();
-
-    let log = format!("[{:?}]: {}, ",
-             now.to_rfc2822(), str);
-
-    if !::ALARM_MANAGER.add_log(log) {
-
-        println!("Add log failed: {}", str);
+    //println!("{:?}", alarm._description);
+    {
+        alarm._time = now.to_rfc2822();
     }
+
+    ::ALARM_MANAGER.active_alarm(alarm);
 }
 
 #[derive(Debug)]
@@ -141,7 +145,7 @@ pub fn get_all_processes() -> Option<Vec<ProcessInfo>> {
     None
 }
 
-pub fn check_process(name:&str)->io::Result<()> {
+pub fn check_process(env:&str, name:&str)->io::Result<()> {
     let mut report = false;
     let ids = get_process_id(name);
     if let Some(ids2) = ids {
@@ -155,8 +159,18 @@ pub fn check_process(name:&str)->io::Result<()> {
     }
 
     if report {
+
         let content = format!("Process {} stopped", name);
-        report_alarm(&content);
+        let alarm = ::Alarm {
+            _id : 1000,
+            _source : "HQ MONITOR".to_string(),
+            _target : name.to_string(),
+            _description : content,
+            _time : Default::default(),
+            _env : env.to_string(),
+        };
+
+        report_alarm(alarm);
     }
 
     Ok(())
@@ -275,4 +289,57 @@ pub fn get_today_date_time() -> (u32, u32) {
     let time = now.hour() * 10000 + now.minute() * 100 + now.second();
 
     (date, time)
+}
+
+use hyper;
+use hyper::Client;
+use std::io::Read;
+
+pub fn send_msg(config:&Configuration, message:&str) {
+
+    let client = Client::new();
+
+    #[derive(Clone, Serialize)]
+    struct Content {
+        content:String,
+        topic:String,
+        tag:String,
+    }
+
+    let mut c = Content{
+        content:message.to_string(),
+        topic:"hq".to_string(),
+        tag:config._sms_tag.clone(),
+    };
+
+    use serde_json;
+    let cr = serde_json::to_string(&c);
+    let content = cr.unwrap_or_default();
+    if content.len() <= 3 {
+        return;
+    }
+
+    println!("sms: {}", content);
+    let mut headers = hyper::header::Headers::new();
+
+    use hyper::header::ContentType;
+    headers.set(ContentType::json());
+    let res = client.post(&config._sms_addr).headers(headers).body(&content).send();
+
+    match res {
+        Ok(mut r)=>{
+            println!("headers:\n {}", r.headers);
+            let mut body = String::new();
+
+            if let Ok(b) = r.read_to_string(&mut body) {
+                println!("body:\n {}", body);
+            } else {
+                println!("body read error");
+            }
+        }
+        Err(e)=>{
+            println!("{:?}", e);
+        }
+    };
+
 }

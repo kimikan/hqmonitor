@@ -42,8 +42,9 @@ fn hello(person: Person) -> String {
     }
 }
 
-#[get("/")]
-fn index() -> Template {
+
+#[get("/history")]
+fn history() -> Template {
 
     let mut v:Vec<String> = vec![];
 
@@ -64,13 +65,38 @@ fn index() -> Template {
     }
 
     let context = TemplateContext { name : "logs".to_string(), items: v };
-    Template::render("list", context)
+    Template::render("history", context)
+}
+
+#[derive(Serialize)]
+struct AlarmsContext {
+    len : usize,
+    items: Vec<::Alarm>
+}
+
+#[get("/")]
+fn index() -> Template {
+
+    let mut v:Vec<::Alarm> = vec![];
+
+    let alarms = &::ALARM_MANAGER._active_alarms;
+
+    //use std::ops::Deref;
+    let a = alarms._alarms.read().unwrap();
+
+    for l in &(*a) {
+        //println!("{}", l);
+        v.push(l.clone());
+    }
+
+    let context = AlarmsContext { len : v.len(), items: v };
+    Template::render("index", context)
 }
 
 fn rocket()->rocket::Rocket {
 
     rocket::ignite()
-        .mount("/", routes![index, hello])
+        .mount("/", routes![index, hello, history])
         .attach(Template::fairing())
         .catch(errors![not_found])
 }

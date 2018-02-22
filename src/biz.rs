@@ -128,7 +128,16 @@ impl BizContext {
     fn report_alarm(&mut self, t : u32) {
         let s = format!("Shanghai stopped: market_time: {}, ", t);
 
-        utils::report_alarm(&s);
+        let alarm = ::Alarm {
+            _id : 2000,
+            _source : "HQ MONITOR".to_string(),
+            _target : "SH_TXT_FILE".to_string(),
+            _description : s,
+            _time : Default::default(),
+            _env : self._config._env.clone(),
+        };
+
+        utils::report_alarm(alarm);
     }
 
     fn check_time(&mut self, time:u32)->io::Result<()> {
@@ -152,7 +161,11 @@ impl BizContext {
 
             if self.is_trade_time(now) {
                 if s_now - (s_market + self._txt_adjust) >= self._config._txt_interval {
-                    println!("{}, {}, {}", now, time, self._txt_adjust);
+                    //println!("11 {}, {}, {} {} {} {}", now, time, self._txt_adjust, self._config._txt_interval, s_now, s_market);
+
+                    self.report_alarm(time);
+                } else if (s_market + self._txt_adjust) - s_now >= self._config._txt_interval {
+                    //println!("22 {}, {}, {}", now, time, self._txt_adjust);
 
                     self.report_alarm(time);
                 }

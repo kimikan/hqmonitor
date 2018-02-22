@@ -5,27 +5,39 @@
     <title>Console dashboard</title>
 </head>
 <body>
-<p><h2>Main page</h2></p>
+<p><h2><a href="history"> Alarm history </a></h2></p>
+<p><h2>Active alarms</h2></p>
 <table width="100%" border="1">
     <tr>
-        <th>Main page</th>
-        <th>Order</th>
-        <th>Order list</th>
-        <th>Accounts</th>
+        <th>Time</th>
+        <th>ID</th>
+        <th>Source</th>
+        <th>Environment</th>
+        <th>Target</th>
+        <th>Description</th>
+        <th></th>
     </tr>
-    <tr>
-        <td><a href="/">Index</a></td>
-        <td><a href="order">List all orders</a></td>
-        <td><a href="orderlist">list all orderlist</a></td>
-        <td><a href="account">list all accounts</a></td>
-    </tr>
-    <tr>
-        <td/>
-        <td><a href="order/add">Add order</a></td>
-        <td><a href="orderlist/add">Add list</a></td>
-        <td><a href="account/add">Add account</a></td>
-    </tr>
-
+    {% if len > 0 %}
+        {% for o in items %}
+            <tr>
+                <td>{{ o._time }}</td>
+                <td>{{ o._id }}</td>
+                <td>{{ o._source }}</td>
+                <td>{{ o._env }}</td>
+                <td>{{ o._target }}</td>
+                <td>{{ o._description }}</td>
+                <td><a href="">I have fixed it</a></td>
+            </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td>Empty</td>
+            <td>Empty</td>
+            <td>Empty</td><td>Empty</td>
+            <td>Empty</td>
+            <td>Empty</td><td>Empty</td>
+        </tr>
+    {% endif %}
 </table>
 </body>
 </html>

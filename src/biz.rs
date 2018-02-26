@@ -27,9 +27,6 @@ impl <R:Read> LineReader<R> for BufReader<R> {
                 return Ok(index);
             }
         }
-
-        use std::io::{Error, ErrorKind};
-        Err(Error::from(ErrorKind::Interrupted))
     }
 }
 
@@ -51,10 +48,11 @@ fn process_header(reader: &mut BufReader<File>) -> io::Result<String> {
     //println!("{:?}, {:?}", size, str);
 
     if size > 0 && str.len() > 80 {
-        let file_len = &str[16..26];
+        //let file_len = &str[16..26];
+        //let file_len = &str[16..26];
         let time = &str[49..70];
         //let flags = &str[73..81];
-        let flags = str.as_bytes();
+        //let flags = str.as_bytes();
         //println!("flags: {:?}", flags);
         let new_time = time.to_owned();
 
@@ -107,15 +105,6 @@ impl BizContext {
         }
     }
 
-    pub fn is_trade_time(&self, time:u32)->bool {
-
-        if time >= self._config._start_time && time <= self._config._end_time {
-            return true;
-        }
-
-        false
-    }
-
 
     fn parse_time(&self, ts:&Vec<&str>)->Result<u32, ParseIntError> {
 
@@ -148,7 +137,7 @@ impl BizContext {
         let s_market = utils::get_seconds(time);
         let s_last = utils::get_seconds(self._txt_time);
 
-        if self.is_trade_time(time) {
+        if self._config.is_trade_time(time) {
 
             if self._txt_adjust == 0 {
                 //only adjust in normal time
@@ -159,7 +148,7 @@ impl BizContext {
                 }
             }
 
-            if self.is_trade_time(now) {
+            if self._config.is_trade_time(now) {
                 if s_now - (s_market + self._txt_adjust) >= self._config._txt_interval {
                     //println!("11 {}, {}, {} {} {} {}", now, time, self._txt_adjust, self._config._txt_interval, s_now, s_market);
 
@@ -186,7 +175,7 @@ impl BizContext {
             let t_str = t.split_off(9);
 
             let ts:Vec<&str> = t_str.split(".").collect();
-            let mut time_str = ts[0].to_string();
+            let time_str = ts[0].to_string();
             time_str.split_at(8);
             let ts2:Vec<&str> = time_str.split(":").collect();
 

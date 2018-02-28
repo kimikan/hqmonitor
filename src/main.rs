@@ -35,6 +35,7 @@ use std::thread;
 use std::sync::RwLock;
 use std::sync::atomic::{ AtomicPtr, Ordering };
 use std::sync::Arc;
+use std::time;
 
 use serde::Serialize;
 #[derive(Clone, Serialize)]
@@ -210,10 +211,8 @@ impl Alarms {
                 Some(i)=>{
                     s.remove(i);
 
-                    use chrono;
-                    let now = chrono::Local::now();
-                    let log = format!("[{:?}]: alarm disabled!, ID: {}, TARGET: {}",
-                                      now.to_rfc2822(), id, target);
+                    let log = format!("Alarm disabled!, ID: {}, TARGET: {}",
+                                      id, target);
                     ::ALARM_MANAGER.add_log(log);
                 },
                 None=>{}
@@ -233,19 +232,32 @@ pub struct AlarmManager {
     _config : RwLock<Option<utils::Configuration>>,
 }
 
+impl Drop for AlarmManager {
+
+    fn drop(&mut self) {
+        self.add_log("Alarm manager closed".to_string());
+
+        println!("alarm manager closed");
+    }
+}
+
 impl AlarmManager {
 
     pub fn new()->AlarmManager {
 
         let alarms = HashMap::new();
 
-        AlarmManager {
+        let alarm_mgr = AlarmManager {
 
             _alarms : RwLock::new(alarms),
             _current_date : RwLock::new(0),
             _active_alarms : Alarms::new(),
             _config : Default::default(),
-        }
+        };
+
+        alarm_mgr.add_log("Alarm manager created! ".to_string());
+
+        alarm_mgr
     }
 
     pub fn set_config(&self, config : utils::Configuration) {
@@ -284,7 +296,11 @@ impl AlarmManager {
         self._active_alarms.disable_alarm(no, target);
     }
 
-    pub fn add_log(&self, log : String) -> bool {
+    pub fn add_log(&self, log2 : String) -> bool {
+
+        let timex = utils::now_to_string();
+
+        let log = format!("*{}* -------- {}", timex, log2);
 
         println!("Add log: {}", log);
         let (date, _) = utils::get_today_date_time();
@@ -293,7 +309,7 @@ impl AlarmManager {
         if today != date {
             self.set_today(date);
         }
-        let today2 = self.get_today();
+        //let today2 = self.get_today();
 
         let mut rr = self._alarms.write();
 
@@ -375,16 +391,22 @@ fn run() ->io::Result<()> {
                 }
                 before = time;
 
-                thread::sleep_ms(1000);
+                //thread::sleep_ms(1000);
+                thread::sleep(time::Duration::from_secs(1));
                 ctx.check_sh_market()?;
 
-                for p in &config._monitor_processes {
-                    utils::check_process(&config._env,&p)?;
+                //end if?
+                if time >= config._start_time && time <= config._end_time {
+                    for p in &config._monitor_processes {
+                        utils::check_process(&config._env, &p)?;
+                    }
                 }
 
             } else {
-                thread::sleep_ms(1000 * 3600);
+                thread::sleep(time::Duration::from_secs(3600));
             }
+        } else {
+            thread::sleep(time::Duration::from_secs(7200));
         }
 
     }
@@ -405,7 +427,7 @@ fn main() {
             println!("Run failed: {:?}", e);
 
             use std::thread;
-            thread::sleep_ms(1000 * 300);
+            thread::sleep(time::Duration::from_secs(300));
         }
     }
 }

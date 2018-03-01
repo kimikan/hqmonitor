@@ -51,7 +51,7 @@ fn history() -> Template {
     let today = ::ALARM_MANAGER.get_today();
     let logs = ::ALARM_MANAGER.get_by_date(today);
 
-    println!("xxxxxxxxxxxxx today:{}, {:?}", today, logs);
+    //println!("xxxxxxxxxxxxx today:{}, {:?}", today, logs);
 
     if let Some(ls) = logs {
         let x = ls.read().unwrap();

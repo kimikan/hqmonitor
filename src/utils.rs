@@ -44,6 +44,15 @@ impl Configuration {
 
         Err(io::Error::from(io::ErrorKind::InvalidData))
     }
+
+    pub fn is_trade_time(&self, time:u32)->bool {
+
+        if time >= self._start_time && time <= self._end_time {
+            return true;
+        }
+
+        false
+    }
 }
 
 impl Clone for Configuration {
@@ -85,13 +94,15 @@ pub fn get_current_time()->u32 {
     time
 }
 
-pub fn report_alarm(mut alarm : ::Alarm) {
+pub fn now_to_string()->String {
     use chrono;
     let now = chrono::Local::now();
-    //println!("{:?}", alarm._description);
-    {
-        alarm._time = now.to_rfc2822();
-    }
+
+    now.to_rfc2822()
+}
+
+pub fn report_alarm(mut alarm : ::Alarm) {
+    alarm._time = now_to_string();
 
     ::ALARM_MANAGER.active_alarm(alarm);
 }
@@ -306,7 +317,7 @@ pub fn send_msg(config:&Configuration, message:&str) {
         tag:String,
     }
 
-    let mut c = Content{
+    let c = Content{
         content:message.to_string(),
         topic:"hq".to_string(),
         tag:config._sms_tag.clone(),
@@ -331,10 +342,10 @@ pub fn send_msg(config:&Configuration, message:&str) {
             println!("headers:\n {}", r.headers);
             let mut body = String::new();
 
-            if let Ok(b) = r.read_to_string(&mut body) {
-                println!("body:\n {}", body);
+            if let Err(e) = r.read_to_string(&mut body) {
+                println!("body read error: {:?}", e);
             } else {
-                println!("body read error");
+                println!("body:\n {}", body);
             }
         }
         Err(e)=>{

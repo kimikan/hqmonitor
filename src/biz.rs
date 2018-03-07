@@ -166,11 +166,9 @@ impl BizContext {
     }
 
     pub fn check_txt(&mut self, file : &str)->io::Result<()> {
-
         let mut t = process_file(file)?;
 
         //20180124-15:30:05.700
-
         if t.len() >= 17 {
             let t_str = t.split_off(9);
 
